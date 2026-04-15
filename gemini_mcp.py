@@ -72,7 +72,7 @@ async def gemini_generate_image(params: GenerateImageInput) -> str:
     try:
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
-                f"{API_BASE}/models/imagen-3.0-generate-002:predict",
+                f"{API_BASE}/models/imagen-3.0-generate-001:predict",
                 params={"key": GEMINI_API_KEY},
                 json={
                     "instances": [{"prompt": params.prompt}],
