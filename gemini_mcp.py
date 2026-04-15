@@ -77,20 +77,19 @@ class GenerateTextInput(BaseModel):
     },
 )
 async def gemini_generate_image(params: GenerateImageInput) -> str:
-    """Generate an image from a text prompt using Gemini's image generation model."""
+    """Generate an image from a text prompt using Gemini 2.0 Flash."""
     if not GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not configured on the server. Contact Michael."
 
     try:
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
-                f"{API_BASE}/models/gemini-2.0-flash-preview-image-generation:generateContent",
+                f"{API_BASE}/models/gemini-2.0-flash-exp:generateContent",
                 params={"key": GEMINI_API_KEY},
                 json={
                     "contents": [{"parts": [{"text": params.prompt}]}],
                     "generationConfig": {
-                        "responseModalities": ["IMAGE"],
-                        
+                        "responseModalities": ["IMAGE", "TEXT"],
                     },
                 },
             )
