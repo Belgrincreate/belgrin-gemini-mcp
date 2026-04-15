@@ -8,6 +8,7 @@ via Google's Gemini API for use inside Cowork sessions.
 import os
 import json
 import httpx
+import uvicorn
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from mcp.server.fastmcp import FastMCP
@@ -158,4 +159,6 @@ async def gemini_generate_text(params: GenerateTextInput) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http")
+    port = int(os.environ.get("PORT", 8000))
+    app = mcp.streamable_http_app()
+    uvicorn.run(app, host="0.0.0.0", port=port)
