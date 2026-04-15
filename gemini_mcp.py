@@ -90,7 +90,7 @@ async def gemini_generate_image(params: GenerateImageInput) -> str:
                     "contents": [{"parts": [{"text": params.prompt}]}],
                     "generationConfig": {
                         "responseModalities": ["IMAGE"],
-                        "numberOfImages": params.num_images,
+                        
                     },
                 },
             )
