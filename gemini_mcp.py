@@ -20,6 +20,8 @@ mcp = FastMCP(
 )
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
+# Override image model via env var if needed: set IMAGE_GENERATION_MODEL on Render
+IMAGE_GENERATION_MODEL = os.environ.get("IMAGE_GENERATION_MODEL", "gemini-2.0-flash-exp")
 
 
 def _handle_error(e: Exception) -> str:
@@ -66,10 +68,56 @@ class GenerateTextInput(BaseModel):
     max_tokens: Optional[int] = Field(default=1024, description="Max output tokens", ge=1, le=8192)
 
 
+class ListModelsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    filter: Optional[str] = Field(default=None, description="Optional filter string e.g. 'imagen' or 'flash'")
+
+
+@mcp.tool(
+    name="gemini_list_models",
+    annotations={
+        "title": "List Available Gemini Models",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def gemini_list_models(params: ListModelsInput) -> str:
+    """List all models available with the configured Gemini API key."""
+    if not GEMINI_API_KEY:
+        return "Error: GEMINI_API_KEY not configured on the server."
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"{API_BASE}/models",
+                params={"key": GEMINI_API_KEY},
+            )
+            response.raise_for_status()
+            data = response.json()
+            models = data.get("models", [])
+
+            if params.filter:
+                models = [m for m in models if params.filter.lower() in m.get("name", "").lower()]
+
+            result = []
+            for m in models:
+                result.append({
+                    "name": m.get("name", ""),
+                    "displayName": m.get("displayName", ""),
+                    "supportedMethods": m.get("supportedGenerationMethods", []),
+                })
+
+            return json.dumps({"total": len(result), "models": result}, indent=2)
+    except Exception as e:
+        return _handle_error(e)
+
+
 @mcp.tool(
     name="gemini_generate_image",
     annotations={
-        "title": "Generate Image with Gemini Imagen",
+        "title": "Generate Image with Gemini",
         "readOnlyHint": False,
         "destructiveHint": False,
         "idempotentHint": False,
@@ -77,14 +125,14 @@ class GenerateTextInput(BaseModel):
     },
 )
 async def gemini_generate_image(params: GenerateImageInput) -> str:
-    """Generate an image from a text prompt using Gemini 2.0 Flash."""
+    """Generate an image from a text prompt using Gemini's image generation model."""
     if not GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not configured on the server. Contact Michael."
 
     try:
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
-                f"{API_BASE}/models/gemini-2.0-flash-exp:generateContent",
+                f"{API_BASE}/models/{IMAGE_GENERATION_MODEL}:generateContent",
                 params={"key": GEMINI_API_KEY},
                 json={
                     "contents": [{"parts": [{"text": params.prompt}]}],
@@ -96,7 +144,6 @@ async def gemini_generate_image(params: GenerateImageInput) -> str:
             response.raise_for_status()
             data = response.json()
 
-            # Extract images from response parts
             images = []
             for candidate in data.get("candidates", []):
                 for part in candidate.get("content", {}).get("parts", []):
@@ -112,7 +159,7 @@ async def gemini_generate_image(params: GenerateImageInput) -> str:
             result = {
                 "success": True,
                 "prompt": params.prompt,
-                "aspect_ratio": params.aspect_ratio,
+                "model_used": IMAGE_GENERATION_MODEL,
                 "images_generated": len(images),
                 "images": [{"index": i, **img} for i, img in enumerate(images)],
             }
