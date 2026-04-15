@@ -64,10 +64,7 @@ class GenerateImageInput(BaseModel):
     },
 )
 async def gemini_generate_image(params: GenerateImageInput) -> str:
-    """
-    Generate an image from a text prompt using Google's Imagen 3 model.
-    Use for social media images, marketing visuals, or any image content for Belgrin clients.
-    """
+    """Generate an image from a text prompt using Google's Imagen 3 model."""
     if not GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not configured on the server. Contact Michael."
 
@@ -135,10 +132,7 @@ class GenerateTextInput(BaseModel):
     },
 )
 async def gemini_generate_text(params: GenerateTextInput) -> str:
-    """
-    Generate text using Google's Gemini 2.0 Flash model.
-    Use for captions, copy, or any marketing text.
-    """
+    """Generate text using Google's Gemini 2.0 Flash model."""
     if not GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not configured on the server."
 
@@ -165,4 +159,4 @@ async def gemini_generate_text(params: GenerateTextInput) -> str:
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
+    mcp.run(transport="streamable-http", port=port)
