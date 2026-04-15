@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: belgrin-gemini-mcp
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python gemini_mcp.py
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
