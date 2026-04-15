@@ -158,5 +158,4 @@ async def gemini_generate_text(params: GenerateTextInput) -> str:
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    mcp.run(transport="streamable-http", port=port)
+    mcp.run(transport="streamable-http")
