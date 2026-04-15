@@ -12,9 +12,9 @@ import uvicorn
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from mcp.server.fastmcp import FastMCP
-
+from mcp.server.fastmcp.server import TransportSecuritySettings
 mcp = FastMCP("gemini_mcp")
-
+mcp = FastMCP("gemini_mcp", transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False))
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
